@@ -1,5 +1,3 @@
-from shutil import which
-
 import numpy as np
 
 def menu():
@@ -51,50 +49,50 @@ def generate_x_matrix(number_of_equations):
 
 
 def split_coefficient_matrix(coefficient_matrix):
-    matrix_L = []
-    matrix_D = []
-    matrix_U = []
-
-    matrix_L.append([0 for i in range(len(coefficient_matrix))])
-    matrix_D.append([0 for i in range(len(coefficient_matrix))])
-    matrix_U.append([0 for i in range(len(coefficient_matrix))])
+    n = len(coefficient_matrix)
+    matrix_l = [[0 for j in range(n)] for i in range(n)]
+    matrix_d = [[0 for j in range(n)] for i in range(n)]
+    matrix_u = [[0 for j in range(n)] for i in range(n)]
 
     # Podział macierzy
-    for i in range(len(coefficient_matrix)):
-        for j in range(len(coefficient_matrix)):
+    for i in range(n):
+        for j in range(n):
             if i > j:
-                matrix_L[i][j] = coefficient_matrix[i][j]
+                matrix_l[i][j] = coefficient_matrix[i][j]
             elif i == j:
-                matrix_D[i][j] = coefficient_matrix[i][j]
+                matrix_d[i][j] = coefficient_matrix[i][j]
             else:
-                matrix_U[i][j] = coefficient_matrix[i][j]
+                matrix_u[i][j] = coefficient_matrix[i][j]
 
-    return matrix_L, matrix_D, matrix_U
+    return matrix_l, matrix_d, matrix_u
 
 
-def inverse_matrix(matrix_D):
-    matrix_N = np.linalg.inv(matrix_D)
-    return matrix_N
+def inverse_matrix(matrix_d):
+    matrix_n = np.linalg.inv(matrix_d)
+    return matrix_n
 
 
 def load_file(number_of_equations):
-    matrix_coefficients = np.zeros((number_of_equations, number_of_equations + 1))
-    matrix_b = []
+    # Create separate matrices for coefficients and constants
+    coefficient_matrix = np.zeros((number_of_equations, number_of_equations))
+    matrix_b = np.zeros(number_of_equations)
+
     try:
         with open(f'coefficients/{number_of_equations}.txt', 'r') as f:
             lines = f.readlines()
 
-        for i in range(len(lines) - 1):
-            for j in range(number_of_equations+1):
-                matrix_coefficients[i][j] = float(lines[i].split(' ')[j])
+        for i in range(number_of_equations):
+            values = lines[i].strip().split()
+            for j in range(number_of_equations):
+                coefficient_matrix[i][j] = float(values[j])
+            # The last value in each row is the b value
+            matrix_b[i] = float(values[number_of_equations])
 
-        for x in lines[-1].split(' '):
-            matrix_b.append(float(x))
-
-        return matrix_coefficients, matrix_b
+        return coefficient_matrix, matrix_b
 
     except FileNotFoundError:
         print(f"Nie znaleziono pliku dla {number_of_equations} równań.")
+        return None, None
 
 
 
@@ -103,53 +101,75 @@ def load_file(number_of_equations):
 # D^(-1) = N
 # M = -D^(-1)(L + U) = -N(L + U)
 
-def matrix_m_calculation(coefficient_matrix):
-    matrix_L, matrix_D, matrix_U = split_coefficient_matrix(coefficient_matrix)
-    matrix_N = inverse_matrix(matrix_D)
+def matrix_m_n_calculation(coefficient_matrix):
+    # Get L, D, U matrices
+    matrix_l, matrix_d, matrix_u = split_coefficient_matrix(coefficient_matrix)
 
-    matrix_L_plus_U = []
-    for i in range(len(matrix_L)):
-        matrix_L_plus_U.append([])
-        for j in range(len(matrix_L)):
-            matrix_L_plus_U[i].append(matrix_L[i][j] + matrix_U[i][j])
+    # Convert to numpy arrays if they aren't already
+    matrix_l = np.array(matrix_l)
+    matrix_d = np.array(matrix_d)
+    matrix_u = np.array(matrix_u)
 
-    matrix_minus_N = []
-    for i in range(len(matrix_N)):
-        matrix_minus_N.append([])
-        for j in range(len(matrix_N)):
-            matrix_minus_N[i].append(-matrix_N[i][j])
+    # Calculate N = D^(-1)
+    matrix_n = np.linalg.inv(matrix_d)
 
-    matrix_M = np.matmul(matrix_minus_N, matrix_L_plus_U)
+    # Calculate M = -N * (L + U)
+    matrix_l_plus_u = matrix_l + matrix_u
+    matrix_m = -np.matmul(matrix_n, matrix_l_plus_u)
 
-    return matrix_M
+    return matrix_m, matrix_n
 
-def jacobian_method(coefficient_matrix, matrix_b, stop_condition_value, stop_condition_type):
+def jacobian_method(matrix_x, matrix_b, matrix_m, matrix_n, stop_condition_value, stop_condition_type):
 
-    matrix_x = generate_x_matrix(len(coefficient_matrix))
-    matrix_m = matrix_m_calculation(coefficient_matrix)
-    i = 0
+    nb = np.matmul(matrix_n, matrix_b)
+    iterations = 0
 
-    # TODO: Implementacja petli
-    # while True:
-    #
-    #
-    #     if stop_condition_type == 'M':
-    #         if i >= stop_condition_value - 1:
-    #         i += 1
-    #     else:
-    #         if ... < stop_condition_value:
+    #Wyświetlenie każdej macierzy
+    print("Macierz współczynników: \n", matrix_m)
+    print("Macierz wyrazów wolnych: \n", matrix_b)
+    print("Macierz N: \n", matrix_n)
+    print('Macierz zmiennych: \n', matrix_x)
+
+    while True:
+        previous_x = matrix_x.copy()
+        matrix_x = np.matmul(matrix_m, previous_x) + nb
+        iterations += 1
+
+        # Calculate error as the norm of the difference between consecutive approximations
+        error = np.linalg.norm(np.subtract(matrix_x, previous_x))
+
+        print(f"Iteration {iterations}: {matrix_x}, error = {error}")
+
+        # Check stopping conditions
+        if stop_condition_type == 'M':
+            if iterations >= stop_condition_value:
+                break
+        else:  # stop_condition_type == 'B'
+            if error < stop_condition_value:
+                break
+    print("Rozwiązanie: ", matrix_x)
+
 
 
 def main():
+
     number_of_equations, stop_condition_value, stop_condition_type = menu()
     matrix_coefficients, matrix_b = load_file(number_of_equations)
+
     if is_matrix_convergent(matrix_coefficients):
-        jacobian_method(matrix_coefficients, matrix_b, stop_condition_value, stop_condition_type)
+
+        matrix_m, matrix_n = matrix_m_n_calculation(matrix_coefficients)
+        matrix_x = generate_x_matrix(len(matrix_coefficients))
+
+        jacobian_method(matrix_x, matrix_b, matrix_m, matrix_n, stop_condition_value, stop_condition_type)
+
     else:
         print("Macierz nie jest zbieżna. Zmień macierz współczynników.")
         return
 
 
-
+# Uruchomienie programu
+if __name__ == "__main__":
+    main()
 
 
