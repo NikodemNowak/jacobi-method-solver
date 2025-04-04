@@ -6,6 +6,7 @@ def main():
     number_of_equations, get_data_option , stop_condition_value, stop_condition_type = menu()
     if get_data_option == 'file':
         matrix_coefficients, matrix_b = load_file(number_of_equations)
+        print("Wczytano macierz: \n" + str(matrix_coefficients) + "\n i wektor b: " + str(matrix_b))
     else:
         matrix_coefficients, matrix_b = get_data_from_user(number_of_equations)
 

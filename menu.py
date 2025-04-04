@@ -22,7 +22,7 @@ def get_number_of_equations():
             elif choice == 2:
                 print("Podaj rozmiar macierzy do wprowadzenia (max 10): ")
                 number_of_equations = int(input())
-                if 1 <= number_of_equations <= 10:
+                if 2 <= number_of_equations <= 10:
                     valid_number = True
                     get_data_option = 'manual'
                 else:
@@ -74,26 +74,52 @@ def menu():
     stop_condition_value = get_stop_condition_value(stop_condition_type)
     return number_of_equations, get_data_option, stop_condition_value, stop_condition_type
 
-def load_file(number_of_equations):
+
+def load_file(file_number):
     # Create separate matrices for coefficients and constants
-    coefficient_matrix = np.zeros((number_of_equations, number_of_equations))
-    matrix_b = np.zeros(number_of_equations)
+    # Example
+    # 3 3 1 12
+    # 2 5 7 33
+    # 1 2 1 8
 
     try:
-        with open(f'coefficients/{number_of_equations}.txt', 'r') as f:
+        with open(f'coefficients/{file_number}.txt', 'r') as f:
             lines = f.readlines()
 
-        for i in range(number_of_equations):
-            values = lines[i].strip().split()
-            for j in range(number_of_equations):
-                coefficient_matrix[i][j] = float(values[j])
-            # The last value in each row is the b value
-            matrix_b[i] = float(values[number_of_equations])
+            # Filtrowanie pustych linii
+            lines = [line.strip() for line in lines if line.strip()]
 
-        return coefficient_matrix, matrix_b
+            if not lines:
+                print("Plik jest pusty.")
+                return None, None
+
+            # Parsowanie linii do postaci macierzy
+            data = []
+            for line in lines:
+                values = list(map(float, line.strip().split()))
+                if len(values) < 2:  # Potrzebujemy co najmniej jeden współczynnik i wyraz wolny
+                    print(f"Błąd w linii: '{line}' - za mało wartości.")
+                    continue
+                data.append(values)
+
+            if not data:
+                print("Brak poprawnych danych w pliku.")
+                return None, None
+
+            # Sprawdzenie czy wszystkie wiersze mają taką samą długość
+            row_lengths = [len(row) for row in data]
+            if len(set(row_lengths)) > 1:
+                print("Błąd: Niezgodna liczba wartości w wierszach.")
+                return None, None
+
+            # Tworzenie macierzy współczynników i wektora wyrazów wolnych
+            coefficient_matrix = np.array([row[:-1] for row in data])
+            matrix_b = np.array([row[-1] for row in data])
+
+            return coefficient_matrix, matrix_b
 
     except FileNotFoundError:
-        print(f"Nie znaleziono pliku dla {number_of_equations} równań.")
+        print(f"Nie znaleziono pliku dla {file_number} równań.")
         return None, None
 
 
@@ -104,8 +130,6 @@ def get_data_from_user(number_of_equations):
 
     print(f"Wprowadź macierz {number_of_equations}x{number_of_equations} oraz wyrazy wolne.")
     print("Format: dla każdego wiersza podaj współczynniki oddzielone spacją, a na końcu wyraz wolny.")
-    print("Przykład dla 2 równań: 2 1 5 (gdzie 2 i 1 to współczynniki, 5 to wyraz wolny)")
-
     for i in range(number_of_equations):
         valid_input = False
         while not valid_input:
