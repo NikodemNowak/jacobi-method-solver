@@ -12,13 +12,11 @@ def is_matrix_convergent(matrix):
             return False
     return True
 
-
 def generate_x_matrix(number_of_equations):
     matrix_x = []
     for i in range(number_of_equations):
         matrix_x.append(0)
     return matrix_x
-
 
 def split_coefficient_matrix(coefficient_matrix):
     n = len(coefficient_matrix)
@@ -38,11 +36,9 @@ def split_coefficient_matrix(coefficient_matrix):
 
     return matrix_l, matrix_d, matrix_u
 
-
 def inverse_matrix(matrix_d):
     matrix_n = np.linalg.inv(matrix_d)
     return matrix_n
-
 
 # Wzór iteracyjny
 # x^(n+1) = Mx + Nb
