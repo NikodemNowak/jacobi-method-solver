@@ -1,5 +1,7 @@
 from menu import menu, load_file, get_data_from_user
-from jacobian_method import jacobian_method, is_matrix_convergent, matrix_m_n_calculation, generate_x_matrix
+from jacobian_method import jacobian_method, is_matrix_convergent, matrix_m_n_calculation, generate_x_matrix, \
+    check_matrix
+
 
 def main():
 
@@ -14,12 +16,16 @@ def main():
     if is_matrix_convergent(matrix_coefficients):
 
         matrix_m, matrix_n = matrix_m_n_calculation(matrix_coefficients)
-        matrix_x = generate_x_matrix(len(matrix_coefficients))
 
-        jacobian_method(matrix_x, matrix_b, matrix_m, matrix_n, stop_condition_value, stop_condition_type)
+        if check_matrix(matrix_m):
+            matrix_x = generate_x_matrix(len(matrix_coefficients))
 
+            jacobian_method(matrix_x, matrix_b, matrix_m, matrix_n, stop_condition_value, stop_condition_type)
+        else:
+            print("Kryterium promienia spektralnego nie zostalo spelnione.")
+            return
     else:
-        print("Macierz nie jest zbieżna. Zmień macierz współczynników.")
+        print("Kryterium silnej dominacji diagonalnej nie zostalo spelnione.")
         return
 
 # Uruchomienie programu

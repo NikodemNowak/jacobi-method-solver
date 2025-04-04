@@ -1,6 +1,11 @@
 import numpy as np
 
+# Sprawdzenie nieredukowaln
+
 def is_matrix_convergent(matrix):
+    for i in range(len(matrix)):
+        if matrix[i][i] == 0: return False
+
     # Warunek dominacji diagonalnej
     for i in range(len(matrix)):
         diagonal_element = abs(matrix[i][i])
@@ -11,6 +16,19 @@ def is_matrix_convergent(matrix):
         if diagonal_element <= sum_of_row:
             return False
     return True
+
+def check_matrix(matrix):
+    max_value = 0
+    for i in range(len(matrix)):
+        for j in range(len(matrix)):
+            if abs(matrix[i][j]) > max_value: max_value = abs(matrix[i][j])
+
+    if max_value >= 1:
+        return False
+    else:
+        return True
+
+
 
 def generate_x_matrix(number_of_equations):
     matrix_x = []
