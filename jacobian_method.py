@@ -73,10 +73,10 @@ def jacobian_method(matrix_x, matrix_b, matrix_m, matrix_n, stop_condition_value
     iterations = 0
 
     #Wyświetlenie każdej macierzy
-    print("Macierz współczynników: \n", matrix_m)
-    print("Macierz wyrazów wolnych: \n", matrix_b)
-    print("Macierz N: \n", matrix_n)
-    print('Macierz zmiennych: \n', matrix_x)
+    print("\nMacierz współczynników: \n", matrix_m)
+    print("\nMacierz wyrazów wolnych: \n", matrix_b)
+    print("\nMacierz N: \n", matrix_n)
+    print('\nMacierz zmiennych: \n', matrix_x)
 
     while True:
         previous_x = matrix_x.copy()
